@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+import argparse , logging
+from mparquet.meta import get_table , print_schema , set_metadata , write_table
+from mparquet.builder import ParquetMetadataBuilder , ModelBuilder
+
+def getArgs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '-co', '--command', help= "command to execute on within Parquet file",choices =['print','type-row','type-column','rdf'])
+    parser.add_argument( '-in', '--input-file', help= "Path to the input Parquet file")
+    parser.add_argument( '-out', '--output-file', help= "Path to the output Parquet file")
+    parser.add_argument( '-fi', '--field', help= "Field of the parquet file")
+    parser.add_argument( '-pr', '--rdf-property', help= "RDF property to be mapped on the entity")
+    parser.add_argument( '-ty', '--rdf-type', help= "RDF propetyperty to be mapped on the entity")
+    parser.add_argument( '-ub', '--uri-base', help= "URI base to use to mint entity's URIs")
+    parser.add_argument( '-of', '--rdf-output-format', help= "Format of the output RDF",choices =['turtle','json-ld','hext','nt','longturtle'])
+
+    args = parser.parse_args() # automatically looks at sys.argv
+    return args
+
+
+def mapColumn(args):
+    logging.basicConfig(filename='error.log', encoding='utf-8', level=logging.DEBUG)
+    table = get_table(args.input_file)
+    mb = ParquetMetadataBuilder()
+    if (args.rdf_property):
+        mb.addColumnPropertyMapping(args.field,args.rdf_property)
+    if (args.uri_base):
+        mb.setColumnBase(args.field,args.uri_base)   
+    mtable = set_metadata(table , col_meta = mb.columns_metadata)
+    write_table(mtable , args.output_file if args.output_file else args.input_file)
+
+def mapRow(args):
+    logging.basicConfig(filename='error.log', encoding='utf-8', level=logging.DEBUG)
+    table = get_table(args.input_file)
+    mb = ParquetMetadataBuilder()
+    if (args.field):
+        mb.setSubjectColumn(args.field)
+    if (args.rdf_type):
+        mb.setSubjectType(args.rdf_type)
+    if (args.uri_base):
+        mb.setSubjectBase(args.uri_base)
+    print(str(mb))   
+    mtable = set_metadata(table ,  tbl_meta = mb.table_metadata )
+    write_table(mtable , args.output_file if args.output_file else args.input_file)
+
+def convert(args):
+    logging.basicConfig(filename='error.log', encoding='utf-8', level=logging.DEBUG)
+    table = get_table(args.input_file)
+    mb = ModelBuilder(table)
+    gr = mb.getModel()
+    if (args.output_file):
+        gr.serialize(destination = args.output_file , format=args.rdf_output_format)
+    else:
+        print("RDF file cannot be serialised on original parquet file")
+
+
+if __name__ == "__main__":
+    args = getArgs()
+    if(args.command) == 'print':
+        table = get_table(args.input_file)
+        print_schema(table.schema)
+    elif(args.command) == 'type-column':
+        mapColumn(args)
+    elif(args.command) == 'type-row':
+        mapRow(args)
+    elif(args.command) == 'rdf':
+        convert(args)

@@ -1,0 +1,4 @@
+pyarrow == 10.0.0
+tabulate == 0.8.10
+rdflib  == 6.2.0
+validators == 0.20.0

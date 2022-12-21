@@ -1,0 +1,22 @@
+[build-system]
+requires = [ "setuptools>=61.0" ,
+    "pyarrow==10.0.0",
+    "tabulate==0.8.10",
+    "rdflib ==6.2.0",
+    "validators==0.20.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mparquet"
+version = "0.0.1"
+authors = [
+  { name="Gianluca Correndo", email="g.correndo@elsevier.com" },
+]
+description = "A small package to access and modify parquet files' metadata"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
